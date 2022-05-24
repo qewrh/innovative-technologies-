@@ -1,0 +1,87 @@
+<!DOCTYPE html> 
+<html> 
+  <head><title>threeJS shaders</title></head> 
+  <body> 
+    <canvas id="Canvas"></canvas> 
+    <script src="https://threejs.org/build/three.js"></script> 
+    
+    <script> 
+
+        const vertexShader = `
+            varying vec3 vUv; 
+            void main() {
+                vUv = position; 
+
+                vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_Position = projectionMatrix * modelViewPosition; 
+            }
+        `
+
+        const fragmentShader = `
+            uniform vec3 colorA; 
+            uniform vec3 colorB; 
+            varying vec3 vUv;
+            void main() {
+                
+                gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+                
+            }
+        `
+
+        //сцену було створено на основі наступного шейдеру: https://dev.to/maniflames/creating-a-custom-shader-in-threejs-3bhi
+        var  renderer = new  THREE.WebGLRenderer({canvas: document.getElementById('Canvas'), antialias: true}); 
+        renderer.setClearColor(0xCBEFFF); 
+        renderer.setPixelRatio(window.devicePixelRatio); 
+        renderer.setSize(window.innerWidth, window.innerHeight); 
+    
+        var camera=new THREE.PerspectiveCamera(35,  
+                    window.innerWidth / window.innerHeight, 0.1, 3000); 
+    
+        var scene=new THREE.Scene(); 
+    
+        let pointLight = new THREE.PointLight(0xdddddd)
+        pointLight.position.set(-5, -3, 3)
+        scene.add(pointLight)
+
+        let ambientLight = new THREE.AmbientLight(0x505050)
+        scene.add(ambientLight)
+    
+        const uniforms = {
+            colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+            colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+        }
+
+        const customShaderMaterial = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            fragmentShader: fragmentShader,
+            vertexShader: vertexShader
+            
+        });
+
+
+        var boxgeometry=new THREE.BoxBufferGeometry(100, 100, 100, 
+                                                    10, 10, 10); 
+        var boxmesh=new THREE.Mesh(boxgeometry, customShaderMaterial); 
+        boxmesh.position.set(-100, 0, -1000); 
+        scene.add(boxmesh); 
+    
+        var cubegeometry=new THREE.BoxBufferGeometry(100, 100, 100); 
+        var cubemesh=new THREE.Mesh(cubegeometry, customShaderMaterial); 
+        cubemesh.position.set(150, 0, -1000); 
+        scene.add(cubemesh); 
+     
+
+        boxmesh.rotation.x = 0.5;
+        cubemesh.rotation.y = 0.5; 
+        function render(){ 
+
+            requestAnimationFrame(render); 
+            renderer.render(scene, camera);
+        } 
+
+        requestAnimationFrame(render);
+
+    </script> 
+  </body> 
+</html> 
+  
